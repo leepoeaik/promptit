@@ -117,7 +117,7 @@ export function PromptCardModal({
 						{prompt.variables &&
 							prompt.variables.length > 0 &&
 							prompt.variables.map((variable, index) => (
-								<div className="mb-4">
+								<div key={index} className="mb-4">
 									<label
 										htmlFor="prompt"
 										className="block text-sm font-medium text-gray-700 mb-2"

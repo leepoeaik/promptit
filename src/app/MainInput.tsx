@@ -1,15 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChangeEvent, useState, KeyboardEvent, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { PromptSchema } from "./PromptSchema";
 import InsertModal from "./InsertCard";
 import { PromptCardModal } from "./PromptCard";
 import { PromptsStorage } from "./hooks/PromptsStorage";
-
-const STORAGE_KEY = "promptsList";
-const NEXT_ID_KEY = "promptsNextId";
 
 export default function MainInput() {
 	const { promptsList, nextId, addPrompt, deletePrompt } = PromptsStorage();
@@ -29,7 +25,7 @@ export default function MainInput() {
 		} else {
 			setOpenPrompt(null);
 		}
-	});
+	}, [openPromptCardModalId]);
 
 	const handleAddPrompt = (newPrompt: PromptSchema) => {
 		addPrompt(newPrompt);
@@ -53,6 +49,8 @@ export default function MainInput() {
 				description: "The prompt has been removed from your list",
 			});
 		} catch (error) {
+			// Handle error during deletion
+			console.error("Error deleting prompt:", error);
 			toast.error("Failed to delete prompt", {
 				description:
 					"Please try again or contact support if the issue persists",

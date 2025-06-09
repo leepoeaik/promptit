@@ -30,6 +30,7 @@ export default function InsertModal({
 			document.addEventListener("keydown", handleEscape);
 			return () => document.removeEventListener("keydown", handleEscape);
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [isOpen, onClose]);
 
 	// Handle backdrop click to close modal

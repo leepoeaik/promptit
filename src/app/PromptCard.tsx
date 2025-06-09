@@ -149,19 +149,27 @@ export function PromptCardModal({
 						</div>
 					)}
 				</div>
-				<div className="mt-4 flex flex-col justify-between min-h-[200px]">
-					<div className="flex gap-4 justify-end">
+
+				{/* Action buttons */}
+				<div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+					<button
+						onClick={handleDelete}
+						className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-medium"
+					>
+						Delete Prompt
+					</button>
+					<div className="flex gap-3">
 						<button
-							onClick={copyPromptToClipboard}
-							className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+							onClick={onClose}
+							className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium"
 						>
-							Copy
+							Cancel
 						</button>
 						<button
-							onClick={handleDelete}
-							className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+							onClick={copyPromptToClipboard}
+							className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium"
 						>
-							Delete
+							Copy to Clipboard
 						</button>
 					</div>
 				</div>

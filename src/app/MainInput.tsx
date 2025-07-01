@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { PromptSchema } from "./PromptSchema";
 import InsertModal from "./InsertCard";
-import { PromptCardModal } from "./PromptCard";
+import { PromptCard } from "./PromptCard";
 import { PromptsStorage } from "./hooks/PromptsStorage";
+import PromptList from "./PromptList";
 
 export default function MainInput() {
 	const { promptsList, nextId, addPrompt, deletePrompt } = PromptsStorage();
@@ -59,50 +60,46 @@ export default function MainInput() {
 	};
 
 	return (
-		<div className="w-full max-w-md mx-auto p-6 space-y-4">
-			{/* Input section */}
-			<div className="flex w-full items-center gap-2">
-				<div className="flex flex-col items-center justify-center h-full">
-					<Button
-						onClick={() => setInsertCardModalOpen(true)}
-						className="w-full"
-					>
-						Add Prompt
-					</Button>
-				</div>
-			</div>
-
-			{/* Display submitted values */}
-			<div className="space-y-2">
-				<h3 className="text-sm font-medium text-gray-700">Added Items:</h3>
-				<div className="space-y-1">
-					{promptsList.map((item) => (
+		<div className="flex h-screen w-full">
+			{/* Left Sidebar - PromptList */}
+			<div className="w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+				<div className="p-4">
+					<div className="flex items-center justify-between mb-4">
+						<h2 className="text-lg font-semibold">Prompts</h2>
 						<Button
-							key={item.id}
-							onClick={() => handleOpenPromptCardModal(item.id)}
-							className="w-full"
+							onClick={() => setInsertCardModalOpen(true)}
+							size="sm"
+							className="ml-2"
 						>
-							{item.title || `Untitled ${item.id}`}
+							+
 						</Button>
-					))}
+					</div>
+					<PromptList onOpenPromptCardModal={handleOpenPromptCardModal} />
 				</div>
 			</div>
 
+			{/* Main Content Area */}
+			<div className="flex-1 overflow-y-auto">
+				<div className="h-full">
+					{/* Other content can go here */}
+					{openPrompt && (
+						<PromptCard
+							prompt={openPrompt}
+							isOpen={!!openPromptCardModalId}
+							onClose={handleClosePromptModal}
+							onDelete={() => handleDeletePrompt(openPrompt.id)}
+						/>
+					)}
+				</div>
+			</div>
+
+			{/* Modals */}
 			<InsertModal
 				onAddPrompt={handleAddPrompt}
 				nextId={nextId}
 				isOpen={isInsertCardModalOpen}
 				onClose={() => setInsertCardModalOpen(false)}
 			/>
-
-			{openPrompt && (
-				<PromptCardModal
-					prompt={openPrompt}
-					isOpen={!!openPromptCardModalId}
-					onClose={handleClosePromptModal}
-					onDelete={() => handleDeletePrompt(openPrompt.id)}
-				/>
-			)}
 		</div>
 	);
 }

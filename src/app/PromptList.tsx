@@ -8,7 +8,7 @@ export default function PromptList({
 }: {
 	onOpenPromptCardModal: (id: string) => void;
 }) {
-	const { promptsList, nextId, addPrompt, deletePrompt } = PromptsStorage();
+	const { promptsList } = PromptsStorage();
 	return (
 		<div className="space-y-2">
 			<h3 className="text-sm font-medium text-gray-700">Added Items:</h3>

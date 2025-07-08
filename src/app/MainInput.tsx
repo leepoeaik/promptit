@@ -39,10 +39,6 @@ export default function MainInput() {
 		setOpenPromptCardModalId(id);
 	};
 
-	const handleClosePromptModal = (): void => {
-		setOpenPromptCardModalId(null);
-	};
-
 	const handleDeletePrompt = async (idToDelete: string): Promise<void> => {
 		try {
 			deletePrompt(idToDelete);
@@ -85,8 +81,6 @@ export default function MainInput() {
 					{openPrompt && (
 						<PromptCard
 							prompt={openPrompt}
-							isOpen={!!openPromptCardModalId}
-							onClose={handleClosePromptModal}
 							onDelete={() => handleDeletePrompt(openPrompt.id)}
 						/>
 					)}

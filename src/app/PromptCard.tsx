@@ -1,86 +1,88 @@
 import { toast } from "sonner";
-import { PromptSchema } from "./PromptSchema";
+import { PromptSchema, VariableSchema } from "./PromptSchema";
 import { useState, useEffect } from "react";
 
 export function PromptCard({
 	prompt,
-	isOpen,
-	onClose,
 	onDelete,
 }: {
 	prompt: PromptSchema;
-	isOpen: boolean;
-	onClose: () => void;
 	onDelete: () => void;
 }) {
-	const [variableValues, setVariableValues] = useState<string[]>([]);
+	const [variableValues, setVariableValues] = useState<VariableSchema[]>(
+		prompt.variables || []
+	);
+	const [finalPrompt, setFinalPrompt] = useState<string>(prompt.content || "");
 
 	useEffect(() => {
 		if (prompt.variables && prompt.variables.length > 0) {
-			setVariableValues(new Array(prompt.variables.length).fill(""));
+			const uniqueVariables = getUniqueVariables(prompt.variables);
+			setVariableValues(uniqueVariables);
 		} else {
 			setVariableValues([]);
 		}
 	}, [prompt.variables]);
 
-	useEffect(() => {
-		const handleEscape = (e: KeyboardEvent) => {
-			if (e.key === "Escape") {
-				onClose();
+	// Defensive check to ensure variables are always unique
+	const getUniqueVariables = (
+		variables: VariableSchema[]
+	): VariableSchema[] => {
+		const uniqueMap = new Map<string, VariableSchema>();
+
+		variables.forEach((variable) => {
+			if (!uniqueMap.has(variable.name)) {
+				uniqueMap.set(variable.name, {
+					name: variable.name,
+					value: variable.value || "",
+				});
 			}
-		};
+		});
 
-		if (isOpen) {
-			document.addEventListener("keydown", handleEscape);
-			return () => document.removeEventListener("keydown", handleEscape);
-		}
-	}, [isOpen, onClose]);
-
-	const handleBackdropClick = (e: React.MouseEvent) => {
-		if (e.target === e.currentTarget) {
-			onClose();
-		}
+		return Array.from(uniqueMap.values());
 	};
+
+	useEffect(() => {
+		// Generate the final prompt whenever variable values change
+		const generatedPrompt = generateFinalPrompt();
+		setFinalPrompt(generatedPrompt);
+	}, [variableValues, prompt.content]);
 
 	const handleVariableChange = (index: number, value: string) => {
 		setVariableValues((prev) => {
 			const newValues = [...prev];
-			newValues[index] = value;
+			newValues[index].value = value;
 			return newValues;
 		});
 	};
 
 	const generateFinalPrompt = (): string => {
-		if (!prompt.variables || prompt.variables.length === 0) {
+		if (!variableValues || variableValues.length === 0) {
 			return prompt.content;
 		}
 
-		let finalPrompt = prompt.content;
+		let result = prompt.content;
 
-		// Find all variable placeholders in the content
-		const regex = /{{ *[^}]+? *}}/g;
-		const matches = [...finalPrompt.matchAll(regex)];
+		variableValues.forEach((variable) => {
+			const regex = new RegExp(
+				`{{\\s*${escapeRegExp(variable.name)}\\s*}}`,
+				"g"
+			);
 
-		// Replace each match by index (from right to left to avoid index shifting)
-		for (let i = matches.length - 1; i >= 0; i--) {
-			const match = matches[i];
-			const value = variableValues[i] || "";
+			// Replace with the variable value, or keep placeholder if no value
+			const replacement = variable.value || `{{ ${variable.name} }}`;
+			result = result.replace(regex, replacement);
+		});
 
-			if (match.index !== undefined) {
-				// Replace this specific occurrence with the value at this index
-				finalPrompt =
-					finalPrompt.slice(0, match.index - 1) +
-					(value || match[0]) +
-					finalPrompt.slice(match.index + match[0].length);
-			}
-		}
+		return result;
+	};
 
-		return finalPrompt;
+	const escapeRegExp = (string: string): string => {
+		return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	};
 
 	const copyPromptToClipboard = () => {
 		navigator.clipboard
-			.writeText(generateFinalPrompt())
+			.writeText(finalPrompt)
 			.then(() => {
 				toast.success("Prompt copied to clipboard");
 			})
@@ -94,10 +96,7 @@ export function PromptCard({
 		toast.success("Prompt deleted successfully", {
 			description: "The prompt has been removed from your list",
 		});
-		onClose();
 	};
-
-	if (!isOpen) return null;
 
 	return (
 		<div className="flex flex-col h-full p-4 bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
@@ -116,13 +115,13 @@ export function PromptCard({
 									htmlFor="prompt"
 									className="block text-sm font-medium text-gray-700 mb-2"
 								>
-									{variable}
+									{variable.name}
 								</label>
 								<textarea
 									id=""
 									className="w-full border p-2 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none whitespace-pre-wrap break-words overflow-y-auto h-20"
-									placeholder={variable}
-									value={variableValues[index] || ""}
+									placeholder={variable.name}
+									value={variableValues[index].value || ""}
 									onChange={(e) => handleVariableChange(index, e.target.value)}
 									autoFocus
 								/>
@@ -135,7 +134,7 @@ export function PromptCard({
 						<h4 className="text-sm font-medium text-gray-700 mb-2">Preview:</h4>
 						<div className="flex-1 overflow-y-auto">
 							<p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
-								{generateFinalPrompt()}
+								{finalPrompt}
 							</p>
 						</div>
 					</div>
@@ -150,12 +149,6 @@ export function PromptCard({
 					Delete Prompt
 				</button>
 				<div className="flex gap-3">
-					<button
-						onClick={onClose}
-						className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium"
-					>
-						Cancel
-					</button>
 					<button
 						onClick={copyPromptToClipboard}
 						className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium"

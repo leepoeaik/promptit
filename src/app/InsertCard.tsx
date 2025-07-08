@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import React, { useState, useEffect } from "react";
-import { PromptSchema } from "./PromptSchema";
+import { PromptSchema, VariableSchema } from "./PromptSchema";
 
 export default function InsertModal({
 	onAddPrompt,
@@ -41,13 +41,12 @@ export default function InsertModal({
 	};
 
 	const handleAdd = () => {
-		// Handle the add logic here
 		if (promptText.trim()) {
 			const newPrompt: PromptSchema = {
-				id: `prompt-${nextId}`, // Unique ID based on timestamp
-				title: title || `Untitled ${nextId}`, // Default title if empty
+				id: `prompt-${nextId}`,
+				title: title || `Untitled ${nextId}`,
 				content: promptText.trim(),
-				variables: extractVariables(promptText.trim()), // Extract variables from the prompt text
+				variables: extractVariables(promptText.trim()),
 			};
 			onAddPrompt(newPrompt);
 			resetInput();
@@ -55,18 +54,27 @@ export default function InsertModal({
 		}
 	};
 
-	function extractVariables(prompt: string): string[] {
+	function extractVariables(prompt: string): VariableSchema[] {
 		const variableRegex = /{{.*?}}/g;
 		const matches = prompt.match(variableRegex);
-		return matches
-			? matches.map((match) => match.replace(/{{|}}/g, "").trim())
-			: [];
+		if (!matches) return [];
+
+		const uniqueVariables = new Set<string>();
+		matches.forEach((match) => {
+			const variableName = match.replace(/{{|}}/g, "").trim();
+			if (variableName) {
+				uniqueVariables.add(variableName);
+			}
+		});
+
+		return Array.from(uniqueVariables).map((name) => ({
+			name: name,
+			value: "",
+		}));
 	}
 
 	const handleAddVariables = () => {
 		setPromptText(promptText + " {{ variable }} ");
-		// Optionally, you can set the cursor position to the end of the text area
-		// set cursor to highlight the work "variable"
 		const textarea = document.getElementById("prompt") as HTMLTextAreaElement;
 		if (textarea) {
 			textarea.focus();
